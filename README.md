@@ -1,5 +1,3 @@
-Here’s an updated `README.md` to reflect the latest changes and clarify instructions on using the new features:
-
 ```markdown
 # JSON Path Experiment
 
@@ -15,14 +13,13 @@ This experiment is a JSON path-finding task designed to test participants' abili
 
 ### Requirements
 - Python 3.7 or higher
-- Required Python packages: `tkinter`, `json`, `random`, `pandas` (for data saving)
 
 ### Installation Instructions
 
 1. **Clone or Download the Repository**
    ```bash
-   git clone TODO
-   ```
+   git clone todo
+   cd todo   ```
 
 2. **Set Up Environment**
    - (Optional) Create a virtual environment to manage dependencies:
@@ -32,9 +29,9 @@ This experiment is a JSON path-finding task designed to test participants' abili
      ```
 
 3. **Install Dependencies**
-   - Install `pandas` for saving results to an Excel file:
+   - Install dependencies from the `requirements.txt` file:
      ```bash
-     pip install pandas
+     pip install -r requirements.txt
      ```
 
 4. **Run the Script**
