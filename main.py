@@ -6,12 +6,55 @@ from tkinter import font
 
 # Expanded word pool for unique attribute names
 word_pool = [
-    "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa",
-    "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon",
-    "phi", "chi", "psi", "omega", "apple", "banana", "carrot", "date", "fig", "grape",
-    "honeydew", "kiwi", "lemon", "mango", "nectarine", "orange", "papaya", "quince",
-    "raspberry", "strawberry", "tangerine", "ugli", "vanilla", "watermelon", "xigua", "yam", "zucchini"
+    "alpha",
+    "beta",
+    "gamma",
+    "delta",
+    "epsilon",
+    "zeta",
+    "eta",
+    "theta",
+    "iota",
+    "kappa",
+    "lambda",
+    "mu",
+    "nu",
+    "xi",
+    "omicron",
+    "pi",
+    "rho",
+    "sigma",
+    "tau",
+    "upsilon",
+    "phi",
+    "chi",
+    "psi",
+    "omega",
+    "apple",
+    "banana",
+    "carrot",
+    "date",
+    "fig",
+    "grape",
+    "honeydew",
+    "kiwi",
+    "lemon",
+    "mango",
+    "nectarine",
+    "orange",
+    "papaya",
+    "quince",
+    "raspberry",
+    "strawberry",
+    "tangerine",
+    "ugli",
+    "vanilla",
+    "watermelon",
+    "xigua",
+    "yam",
+    "zucchini",
 ]
+
 
 class JSONValue:
     def __init__(self, value):
@@ -19,6 +62,7 @@ class JSONValue:
 
     def to_dict(self):
         return self.value
+
 
 class JSONObject:
     def __init__(self):
@@ -65,7 +109,9 @@ class JSONObject:
             current = current.fields[field_name]
 
         self.correct_path = ".".join(path)
-        self.target_attribute = current.value if isinstance(current, JSONValue) else None
+        self.target_attribute = (
+            current.value if isinstance(current, JSONValue) else None
+        )
 
     def to_dict(self):
         result = {}
@@ -109,6 +155,7 @@ class JSONObject:
         formatted_lines = format_dict(self.to_dict())
         return "\n".join(formatted_lines)
 
+
 # GUI with Tkinter
 class JSONPathExperimentApp:
     def __init__(self, root):
@@ -126,39 +173,51 @@ class JSONPathExperimentApp:
         self.setup_question()
 
         # Bind the Enter key to submit the path
-        self.root.bind('<Return>', lambda event: self.check_path())
+        self.root.bind("<Return>", lambda event: self.check_path())
 
     def setup_ui(self):
         # JSON Display Frame
         self.json_frame = tk.Frame(self.root)
         self.json_frame.pack(pady=10)
-        
+
         # JSON Structure Text
-        self.json_display = tk.Text(self.json_frame, height=20, width=80, wrap='word', font=self.custom_font)
-        self.json_display.config(state='disabled')
+        self.json_display = tk.Text(
+            self.json_frame, height=50, width=80, wrap="word", font=self.custom_font
+        )
+        self.json_display.config(state="disabled")
         self.json_display.pack()
 
         # Target Attribute Display
         self.target_display_frame = tk.Frame(self.root)
         self.target_display_frame.pack(pady=10)
-        self.target_display = tk.Label(self.target_display_frame, text="Target Attribute: ", font=("Arial", 12, "bold"))
+        self.target_display = tk.Label(
+            self.target_display_frame,
+            text="Target Attribute: ",
+            font=("Arial", 12, "bold"),
+        )
         self.target_display.pack()
 
         # Path Display Frame
         self.path_display_frame = tk.Frame(self.root)
         self.path_display_frame.pack(pady=10)
-        self.path_display = tk.Label(self.path_display_frame, text="Current Path:", font=self.custom_font)
+        self.path_display = tk.Label(
+            self.path_display_frame, text="Current Path:", font=self.custom_font
+        )
         self.path_display.pack()
 
         # Key Button Grid
         self.key_button_frame = tk.Frame(self.root)
         self.key_button_frame.pack(pady=10)
-        
+
         # Action Buttons Frame
         self.action_frame = tk.Frame(self.root)
         self.action_frame.pack(pady=10)
-        tk.Button(self.action_frame, text="Clear Path", command=self.clear_path).pack(side="left", padx=5)
-        tk.Button(self.action_frame, text="Remove Last", command=self.remove_last_from_path).pack(side="left", padx=5)
+        tk.Button(self.action_frame, text="Clear Path", command=self.clear_path).pack(
+            side="left", padx=5
+        )
+        tk.Button(
+            self.action_frame, text="Remove Last", command=self.remove_last_from_path
+        ).pack(side="left", padx=5)
 
     def setup_question(self):
         self.current_path = []
@@ -181,11 +240,15 @@ class JSONPathExperimentApp:
             self.non_indented_count -= 1
 
         # Display JSON Structure
-        self.json_display.config(state='normal')
+        self.json_display.config(state="normal")
         self.json_display.delete("1.0", tk.END)
-        json_structure = json.dumps(self.json_object.to_dict(), indent=4) if self.indented else self.json_object.format_json_unindented()
+        json_structure = (
+            json.dumps(self.json_object.to_dict(), indent=4)
+            if self.indented
+            else self.json_object.format_json_unindented()
+        )
         self.json_display.insert(tk.END, json_structure)
-        self.json_display.config(state='disabled')
+        self.json_display.config(state="disabled")
 
         # Display Target Attribute
         target_text = f"Target Attribute: {self.json_object.target_attribute}"
@@ -200,12 +263,17 @@ class JSONPathExperimentApp:
     def show_all_key_buttons(self):
         for widget in self.key_button_frame.winfo_children():
             widget.destroy()
-        
+
         # Retrieve all unique keys used in the JSON structure
         json_keys = self.json_object.get_all_keys()
         columns = 6  # Number of columns for grid layout
         for i, key in enumerate(json_keys):
-            button = tk.Button(self.key_button_frame, text=key, width=10, command=lambda k=key: self.add_to_path(k))
+            button = tk.Button(
+                self.key_button_frame,
+                text=key,
+                width=10,
+                command=lambda k=key: self.add_to_path(k),
+            )
             button.grid(row=i // columns, column=i % columns, padx=5, pady=5)
 
     def add_to_path(self, key):
@@ -228,16 +296,22 @@ class JSONPathExperimentApp:
     def check_path(self):
         user_path = ".".join(self.current_path)
         if self.json_object.verify_path(user_path):
-            messagebox.showinfo("Correct", "Correct path! Moving to the next question...")
+            messagebox.showinfo(
+                "Correct", "Correct path! Moving to the next question..."
+            )
             if self.current_question < self.total_questions:
                 self.current_question += 1
                 self.setup_question()
             else:
-                messagebox.showinfo("Experiment Complete", "Congratulations! You've completed all questions.")
+                messagebox.showinfo(
+                    "Experiment Complete",
+                    "Congratulations! You've completed all questions.",
+                )
                 self.root.quit()
         else:
             messagebox.showwarning("Incorrect", "Incorrect path. Please try again.")
             self.clear_path()
+
 
 # Initialize the app
 if __name__ == "__main__":
