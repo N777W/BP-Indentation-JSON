@@ -1,60 +1,18 @@
 import random
 import json
 import tkinter as tk
-from tkinter import messagebox
-from tkinter import font
+from tkinter import messagebox, font
+import time
+import pandas as pd
 
 # Expanded word pool for unique attribute names
 word_pool = [
-    "alpha",
-    "beta",
-    "gamma",
-    "delta",
-    "epsilon",
-    "zeta",
-    "eta",
-    "theta",
-    "iota",
-    "kappa",
-    "lambda",
-    "mu",
-    "nu",
-    "xi",
-    "omicron",
-    "pi",
-    "rho",
-    "sigma",
-    "tau",
-    "upsilon",
-    "phi",
-    "chi",
-    "psi",
-    "omega",
-    "apple",
-    "banana",
-    "carrot",
-    "date",
-    "fig",
-    "grape",
-    "honeydew",
-    "kiwi",
-    "lemon",
-    "mango",
-    "nectarine",
-    "orange",
-    "papaya",
-    "quince",
-    "raspberry",
-    "strawberry",
-    "tangerine",
-    "ugli",
-    "vanilla",
-    "watermelon",
-    "xigua",
-    "yam",
-    "zucchini",
+    "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa",
+    "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon",
+    "phi", "chi", "psi", "omega", "apple", "banana", "carrot", "date", "fig", "grape",
+    "honeydew", "kiwi", "lemon", "mango", "nectarine", "orange", "papaya", "quince",
+    "raspberry", "strawberry", "tangerine", "ugli", "vanilla", "watermelon", "xigua", "yam", "zucchini"
 ]
-
 
 class JSONValue:
     def __init__(self, value):
@@ -63,14 +21,13 @@ class JSONValue:
     def to_dict(self):
         return self.value
 
-
 class JSONObject:
     def __init__(self):
         self.fields = {}
         self.target_attribute = None
         self.correct_path = ""
 
-    def parse(self, depth=3, available_keys=None, used_keys=None, used_values=None):
+    def parse(self, depth=2, available_keys=None, used_keys=None, used_values=None):
         if available_keys is None:
             available_keys = set(word_pool)
         if used_keys is None:
@@ -78,7 +35,7 @@ class JSONObject:
         if used_values is None:
             used_values = set()
 
-        num_fields = random.randint(2, 4)
+        num_fields = random.randint(1, 3)
         added_keys = 0
 
         while available_keys and added_keys < num_fields:
@@ -109,9 +66,7 @@ class JSONObject:
             current = current.fields[field_name]
 
         self.correct_path = ".".join(path)
-        self.target_attribute = (
-            current.value if isinstance(current, JSONValue) else None
-        )
+        self.target_attribute = current.value if isinstance(current, JSONValue) else None
 
     def to_dict(self):
         result = {}
@@ -155,7 +110,6 @@ class JSONObject:
         formatted_lines = format_dict(self.to_dict())
         return "\n".join(formatted_lines)
 
-
 # GUI with Tkinter
 class JSONPathExperimentApp:
     def __init__(self, root):
@@ -169,11 +123,13 @@ class JSONPathExperimentApp:
         self.non_indented_count = 15  # Track remaining non-indented cases
         self.custom_font = font.Font(family="Courier", size=10)
 
+        # Time and attempt tracking
+        self.start_time = None
+        self.attempts = 0
+        self.results = []
+
         self.setup_ui()
         self.setup_question()
-
-        # Bind the Enter key to submit the path
-        self.root.bind("<Return>", lambda event: self.check_path())
 
     def setup_ui(self):
         # JSON Display Frame
@@ -182,7 +138,7 @@ class JSONPathExperimentApp:
 
         # JSON Structure Text
         self.json_display = tk.Text(
-            self.json_frame, height=50, width=80, wrap="word", font=self.custom_font
+            self.json_frame, height=20, width=80, wrap="word", font=self.custom_font
         )
         self.json_display.config(state="disabled")
         self.json_display.pack()
@@ -218,9 +174,27 @@ class JSONPathExperimentApp:
         tk.Button(
             self.action_frame, text="Remove Last", command=self.remove_last_from_path
         ).pack(side="left", padx=5)
+        tk.Button(
+            self.action_frame, text="Submit Path", command=self.check_path
+        ).pack(side="left", padx=5)
+
+        # Entry for direct text input of path
+        self.entry_frame = tk.Frame(self.root)
+        self.entry_frame.pack(pady=10)
+        tk.Label(self.entry_frame, text="Enter Path: ").pack(side="left")
+        self.entry_path = tk.Entry(self.entry_frame, width=50)
+        self.entry_path.pack(side="left", padx=5)
+        tk.Button(self.entry_frame, text="Submit", command=self.submit_entry_path).pack(side="left")
+
+        # Bind Enter key to the check_path function
+        self.root.bind("<Return>", lambda event: self.check_path())
 
     def setup_question(self):
+        # Clear path and input field for the new question
         self.current_path = []
+        self.entry_path.delete(0, tk.END)
+        self.attempts = 0  # Reset attempts for each question
+        self.start_time = time.time()  # Start time for the question
         available_keys = set(word_pool)
         self.json_object = JSONObject()
         self.json_object.parse(available_keys=available_keys)
@@ -279,39 +253,65 @@ class JSONPathExperimentApp:
     def add_to_path(self, key):
         self.current_path.append(key)
         self.update_path_display()
+        self.entry_path.delete(0, tk.END)  # Clear the entry field first
+        self.entry_path.insert(0, ".".join(self.current_path))  # Update entry field with the current path
 
     def remove_last_from_path(self):
         if self.current_path:
             self.current_path.pop()
         self.update_path_display()
+        self.entry_path.delete(0, tk.END)
+        self.entry_path.insert(0, ".".join(self.current_path))
 
     def clear_path(self):
         self.current_path = []
         self.update_path_display()
+        self.entry_path.delete(0, tk.END)
 
     def update_path_display(self):
         path_text = "Current Path: " + " > ".join(self.current_path)
         self.path_display.config(text=path_text)
 
+    def submit_entry_path(self):
+        # Submit path from the entry text field
+        user_path = self.entry_path.get()
+        self.verify_and_proceed(user_path)
+
     def check_path(self):
+        # Verify current path created using buttons
         user_path = ".".join(self.current_path)
+        self.verify_and_proceed(user_path)
+
+    def verify_and_proceed(self, user_path):
+        self.attempts += 1  # Increment attempt counter
         if self.json_object.verify_path(user_path):
-            messagebox.showinfo(
-                "Correct", "Correct path! Moving to the next question..."
-            )
+            time_taken = time.time() - self.start_time  # Calculate time for the question
+            # Save result for this question
+            self.results.append({
+                "Question": self.current_question,
+                "Correct Path": self.json_object.correct_path,
+                "User Path": user_path,
+                "Attempts": self.attempts,
+                "Time Taken (s)": time_taken
+            })
+
+            messagebox.showinfo("Correct", "Correct path! Moving to the next question...")
             if self.current_question < self.total_questions:
                 self.current_question += 1
                 self.setup_question()
             else:
-                messagebox.showinfo(
-                    "Experiment Complete",
-                    "Congratulations! You've completed all questions.",
-                )
+                messagebox.showinfo("Experiment Complete", "Congratulations! You've completed all questions.")
+                self.save_results_to_excel()  # Save data after all questions
                 self.root.quit()
         else:
             messagebox.showwarning("Incorrect", "Incorrect path. Please try again.")
             self.clear_path()
 
+    def save_results_to_excel(self):
+        # Save the recorded data to an Excel file
+        df = pd.DataFrame(self.results)
+        df.to_excel("JSONPathExperimentResults.xlsx", index=False)
+        messagebox.showinfo("Data Saved", "Results saved to JSONPathExperimentResults.xlsx")
 
 # Initialize the app
 if __name__ == "__main__":
