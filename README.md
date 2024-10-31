@@ -1,4 +1,3 @@
-```markdown
 # JSON Path Experiment
 
 This experiment is a JSON path-finding task designed to test participants' ability to identify correct JSON object paths. The interface presents randomly generated JSON structures with various depths and fields. Participants are tasked with locating a specific target attribute path in each JSON structure. The JSON object can appear in either an indented or non-indented format.
