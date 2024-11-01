@@ -27,16 +27,18 @@ class JSONObject:
         self.target_attribute = None
         self.correct_path = ""
 
-    def parse(self, depth=2, available_keys=None, used_keys=None, used_values=None):
-        if available_keys is None:
-            available_keys = set(word_pool)
+    def parse(self, depth=3, max_fields=3, enforce_nested=True, available_keys=None, used_keys=None, used_values=None):
+        """Generate JSON structure with controlled depth, fields, and enforced nesting for complexity."""
+        if available_keys is None or not available_keys:
+            available_keys = set(word_pool) - used_keys  # Refill keys if exhausted
         if used_keys is None:
             used_keys = set()
         if used_values is None:
             used_values = set()
 
-        num_fields = random.randint(1, 3)
+        num_fields = min(random.randint(2, max_fields), len(available_keys))
         added_keys = 0
+        has_nested = False
 
         while available_keys and added_keys < num_fields:
             name = random.choice(list(available_keys - used_keys))
@@ -44,16 +46,26 @@ class JSONObject:
             available_keys.remove(name)
             added_keys += 1
 
-            if depth > 1 and random.random() > 0.5:
+            if depth > 1 and (random.random() > 0.4 or (enforce_nested and not has_nested)):
+                # Add nested JSONObject if we still have depth and enforce at least one nested structure
                 obj = JSONObject()
-                obj.parse(depth - 1, available_keys, used_keys, used_values)
+                obj.parse(depth - 1, max_fields=2, enforce_nested=False, available_keys=available_keys, used_keys=used_keys, used_values=used_values)
                 self.fields[name] = obj
+                has_nested = True
             else:
+                # Assign JSONValue to fields
                 possible_values = list((set(word_pool) - used_values) - {name})
                 if possible_values:
                     value = random.choice(possible_values)
                     used_values.add(value)
                     self.fields[name] = JSONValue(value)
+
+        if enforce_nested and not has_nested and depth > 1:
+            # Ensure at least one nested object if enforce_nested is True and depth allows
+            name = random.choice(list(available_keys - used_keys))
+            obj = JSONObject()
+            obj.parse(depth - 1, max_fields=2, enforce_nested=False, available_keys=available_keys, used_keys=used_keys, used_values=used_values)
+            self.fields[name] = obj
 
         self.set_random_target_attribute()
 
@@ -65,8 +77,11 @@ class JSONObject:
             path.append(field_name)
             current = current.fields[field_name]
 
-        self.correct_path = ".".join(path)
-        self.target_attribute = current.value if isinstance(current, JSONValue) else None
+        if isinstance(current, JSONValue):
+            self.correct_path = ".".join(path)
+            self.target_attribute = current.value
+        else:
+            self.correct_path, self.target_attribute = None, None
 
     def to_dict(self):
         result = {}
@@ -110,7 +125,7 @@ class JSONObject:
         formatted_lines = format_dict(self.to_dict())
         return "\n".join(formatted_lines)
 
-# GUI with Tkinter
+# GUI with Tkinter for interaction
 class JSONPathExperimentApp:
     def __init__(self, root):
         self.root = root
@@ -138,7 +153,7 @@ class JSONPathExperimentApp:
 
         # JSON Structure Text
         self.json_display = tk.Text(
-            self.json_frame, height=20, width=80, wrap="word", font=self.custom_font
+            self.json_frame, height=50, width=80, wrap="word", font=self.custom_font
         )
         self.json_display.config(state="disabled")
         self.json_display.pack()
@@ -197,7 +212,7 @@ class JSONPathExperimentApp:
         self.start_time = time.time()  # Start time for the question
         available_keys = set(word_pool)
         self.json_object = JSONObject()
-        self.json_object.parse(available_keys=available_keys)
+        self.json_object.parse(depth=3, max_fields=3, enforce_nested=True, available_keys=available_keys)
 
         # Randomly choose between indented and non-indented, keeping a balanced count
         if self.indented_count > 0 and self.non_indented_count > 0:
@@ -225,7 +240,7 @@ class JSONPathExperimentApp:
         self.json_display.config(state="disabled")
 
         # Display Target Attribute
-        target_text = f"Target Attribute: {self.json_object.target_attribute}"
+        target_text = f"Target Attribute: {self.json_object.target_attribute or 'Not Set'}"
         self.target_display.config(text=target_text)
 
         # Display Current Path
@@ -292,7 +307,8 @@ class JSONPathExperimentApp:
                 "Correct Path": self.json_object.correct_path,
                 "User Path": user_path,
                 "Attempts": self.attempts,
-                "Time Taken (s)": time_taken
+                "Time Taken (s)": time_taken,
+                "Indented": "Yes" if self.indented else "No"  # Record if indented
             })
 
             messagebox.showinfo("Correct", "Correct path! Moving to the next question...")
