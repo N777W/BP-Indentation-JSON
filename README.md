@@ -58,7 +58,7 @@ This experiment is a JSON path-finding task designed to test participants' abili
 ## Experiment Structure
 
 Each JSON structure is generated with a random layout, following these specifications:
-- **JSON Depth**: Up to 2 nested levels to ensure readability.
+- **JSON Depth**: Up to 3 nested levels to ensure readability.
 - **Indented/Non-Indented**: Randomized format, with an equal distribution of 15 indented and 15 non-indented JSONs per experiment.
 
 ## Data and Analysis
