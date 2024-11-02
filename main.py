@@ -7,12 +7,55 @@ import pandas as pd
 
 # Expanded word pool for unique attribute names
 word_pool = [
-    "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa",
-    "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon",
-    "phi", "chi", "psi", "omega", "apple", "banana", "carrot", "date", "fig", "grape",
-    "honeydew", "kiwi", "lemon", "mango", "nectarine", "orange", "papaya", "quince",
-    "raspberry", "strawberry", "tangerine", "ugli", "vanilla", "watermelon", "xigua", "yam", "zucchini"
+    "alpha",
+    "beta",
+    "gamma",
+    "delta",
+    "epsilon",
+    "zeta",
+    "eta",
+    "theta",
+    "iota",
+    "kappa",
+    "lambda",
+    "mu",
+    "nu",
+    "xi",
+    "omicron",
+    "pi",
+    "rho",
+    "sigma",
+    "tau",
+    "upsilon",
+    "phi",
+    "chi",
+    "psi",
+    "omega",
+    "apple",
+    "banana",
+    "carrot",
+    "date",
+    "fig",
+    "grape",
+    "honeydew",
+    "kiwi",
+    "lemon",
+    "mango",
+    "nectarine",
+    "orange",
+    "papaya",
+    "quince",
+    "raspberry",
+    "strawberry",
+    "tangerine",
+    "ugli",
+    "vanilla",
+    "watermelon",
+    "xigua",
+    "yam",
+    "zucchini",
 ]
+
 
 class JSONValue:
     def __init__(self, value):
@@ -21,13 +64,22 @@ class JSONValue:
     def to_dict(self):
         return self.value
 
+
 class JSONObject:
     def __init__(self):
         self.fields = {}
         self.target_attribute = None
         self.correct_path = ""
 
-    def parse(self, depth=3, max_fields=3, enforce_nested=True, available_keys=None, used_keys=None, used_values=None):
+    def parse(
+        self,
+        depth=3,
+        max_fields=3,
+        enforce_nested=True,
+        available_keys=None,
+        used_keys=None,
+        used_values=None,
+    ):
         """Generate JSON structure with controlled depth, fields, and enforced nesting for complexity."""
         if available_keys is None or not available_keys:
             available_keys = set(word_pool) - used_keys  # Refill keys if exhausted
@@ -46,10 +98,19 @@ class JSONObject:
             available_keys.remove(name)
             added_keys += 1
 
-            if depth > 1 and (random.random() > 0.4 or (enforce_nested and not has_nested)):
+            if depth > 1 and (
+                random.random() > 0.4 or (enforce_nested and not has_nested)
+            ):
                 # Add nested JSONObject if we still have depth and enforce at least one nested structure
                 obj = JSONObject()
-                obj.parse(depth - 1, max_fields=2, enforce_nested=False, available_keys=available_keys, used_keys=used_keys, used_values=used_values)
+                obj.parse(
+                    depth - 1,
+                    max_fields=2,
+                    enforce_nested=False,
+                    available_keys=available_keys,
+                    used_keys=used_keys,
+                    used_values=used_values,
+                )
                 self.fields[name] = obj
                 has_nested = True
             else:
@@ -64,7 +125,14 @@ class JSONObject:
             # Ensure at least one nested object if enforce_nested is True and depth allows
             name = random.choice(list(available_keys - used_keys))
             obj = JSONObject()
-            obj.parse(depth - 1, max_fields=2, enforce_nested=False, available_keys=available_keys, used_keys=used_keys, used_values=used_values)
+            obj.parse(
+                depth - 1,
+                max_fields=2,
+                enforce_nested=False,
+                available_keys=available_keys,
+                used_keys=used_keys,
+                used_values=used_values,
+            )
             self.fields[name] = obj
 
         self.set_random_target_attribute()
@@ -124,6 +192,7 @@ class JSONObject:
 
         formatted_lines = format_dict(self.to_dict())
         return "\n".join(formatted_lines)
+
 
 # GUI with Tkinter for interaction
 class JSONPathExperimentApp:
@@ -189,9 +258,9 @@ class JSONPathExperimentApp:
         tk.Button(
             self.action_frame, text="Remove Last", command=self.remove_last_from_path
         ).pack(side="left", padx=5)
-        tk.Button(
-            self.action_frame, text="Submit Path", command=self.check_path
-        ).pack(side="left", padx=5)
+        tk.Button(self.action_frame, text="Submit Path", command=self.check_path).pack(
+            side="left", padx=5
+        )
 
         # Entry for direct text input of path
         self.entry_frame = tk.Frame(self.root)
@@ -199,7 +268,9 @@ class JSONPathExperimentApp:
         tk.Label(self.entry_frame, text="Enter Path: ").pack(side="left")
         self.entry_path = tk.Entry(self.entry_frame, width=50)
         self.entry_path.pack(side="left", padx=5)
-        tk.Button(self.entry_frame, text="Submit", command=self.submit_entry_path).pack(side="left")
+        tk.Button(self.entry_frame, text="Submit", command=self.submit_entry_path).pack(
+            side="left"
+        )
 
         # Bind Enter key to the check_path function
         self.root.bind("<Return>", lambda event: self.check_path())
@@ -212,7 +283,9 @@ class JSONPathExperimentApp:
         self.start_time = time.time()  # Start time for the question
         available_keys = set(word_pool)
         self.json_object = JSONObject()
-        self.json_object.parse(depth=3, max_fields=3, enforce_nested=True, available_keys=available_keys)
+        self.json_object.parse(
+            depth=3, max_fields=3, enforce_nested=True, available_keys=available_keys
+        )
 
         # Randomly choose between indented and non-indented, keeping a balanced count
         if self.indented_count > 0 and self.non_indented_count > 0:
@@ -240,7 +313,9 @@ class JSONPathExperimentApp:
         self.json_display.config(state="disabled")
 
         # Display Target Attribute
-        target_text = f"Target Attribute: {self.json_object.target_attribute or 'Not Set'}"
+        target_text = (
+            f"Target Attribute: {self.json_object.target_attribute or 'Not Set'}"
+        )
         self.target_display.config(text=target_text)
 
         # Display Current Path
@@ -269,7 +344,9 @@ class JSONPathExperimentApp:
         self.current_path.append(key)
         self.update_path_display()
         self.entry_path.delete(0, tk.END)  # Clear the entry field first
-        self.entry_path.insert(0, ".".join(self.current_path))  # Update entry field with the current path
+        self.entry_path.insert(
+            0, ".".join(self.current_path)
+        )  # Update entry field with the current path
 
     def remove_last_from_path(self):
         if self.current_path:
@@ -300,23 +377,32 @@ class JSONPathExperimentApp:
     def verify_and_proceed(self, user_path):
         self.attempts += 1  # Increment attempt counter
         if self.json_object.verify_path(user_path):
-            time_taken = time.time() - self.start_time  # Calculate time for the question
+            time_taken = (
+                time.time() - self.start_time
+            )  # Calculate time for the question
             # Save result for this question
-            self.results.append({
-                "Question": self.current_question,
-                "Correct Path": self.json_object.correct_path,
-                "User Path": user_path,
-                "Attempts": self.attempts,
-                "Time Taken (s)": time_taken,
-                "Indented": "Yes" if self.indented else "No"  # Record if indented
-            })
+            self.results.append(
+                {
+                    "Question": self.current_question,
+                    "Correct Path": self.json_object.correct_path,
+                    "User Path": user_path,
+                    "Attempts": self.attempts,
+                    "Time Taken (s)": time_taken,
+                    "Indented": "Yes" if self.indented else "No",  # Record if indented
+                }
+            )
 
-            messagebox.showinfo("Correct", "Correct path! Moving to the next question...")
+            messagebox.showinfo(
+                "Correct", "Correct path! Moving to the next question..."
+            )
             if self.current_question < self.total_questions:
                 self.current_question += 1
                 self.setup_question()
             else:
-                messagebox.showinfo("Experiment Complete", "Congratulations! You've completed all questions.")
+                messagebox.showinfo(
+                    "Experiment Complete",
+                    "Congratulations! You've completed all questions.",
+                )
                 self.save_results_to_excel()  # Save data after all questions
                 self.root.quit()
         else:
@@ -327,7 +413,10 @@ class JSONPathExperimentApp:
         # Save the recorded data to an Excel file
         df = pd.DataFrame(self.results)
         df.to_excel("JSONPathExperimentResults.xlsx", index=False)
-        messagebox.showinfo("Data Saved", "Results saved to JSONPathExperimentResults.xlsx")
+        messagebox.showinfo(
+            "Data Saved", "Results saved to JSONPathExperimentResults.xlsx"
+        )
+
 
 # Initialize the app
 if __name__ == "__main__":
