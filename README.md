@@ -18,7 +18,8 @@ This experiment is a JSON path-finding task designed to test participants' abili
 1. **Clone or Download the Repository**
    ```bash
    git clone git@github.com:N777W/BP-Indentation-JSON.git
-   cd BP-Indentation-JSON   ```
+   cd BP-Indentation-JSON
+    ```
 
 2. **Set Up Environment**
    - (Optional) Create a virtual environment to manage dependencies:
